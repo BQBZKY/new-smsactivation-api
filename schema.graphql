@@ -1,0 +1,34 @@
+schema {
+    query: Query
+}
+
+# Query, Mutation & Subscription types
+
+type Query {
+    items: [Item!]!
+    item(id: ID!): Item
+}
+
+# Custom Scalars
+
+scalar Currency
+scalar CountryCode
+
+# Complex types
+
+type Item {
+    id: ID!
+    title: String!
+
+    prices: [ItemPrice!]!
+    price(country_code: CountryCode!): ItemPrice
+}
+
+type ItemPrice {
+    country: String!
+    country_code: CountryCode!
+
+    price: Currency! # то же самое что и retail_price
+    retail_price: Currency!
+    wholesale_price: Currency!
+}
