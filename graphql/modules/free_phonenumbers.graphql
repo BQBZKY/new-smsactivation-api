@@ -1,0 +1,20 @@
+extend type Query {
+    free_phonenumbers: [FreePhonenumber!]!
+    free_messages(
+        phonenumber: PhoneNumber!
+        cursor: Int!
+        limit: Int!
+    ): [FreeMessage!]!
+}
+
+type FreePhonenumber {
+    phonenumber: PhoneNumber!
+    activated_at: DateTime!
+}
+
+type FreeMessage {
+    id: ID!
+    message: String!
+    received_from: String!
+    received_at: DateTime!
+}
