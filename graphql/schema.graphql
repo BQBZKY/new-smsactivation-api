@@ -16,3 +16,5 @@ type Subscription {}
 
 scalar Currency
 scalar CountryCode
+scalar DateTime
+scalar PhoneNumber

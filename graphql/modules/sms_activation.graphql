@@ -1,0 +1,73 @@
+extend type Query {
+    buy_sms_activation(
+        item_id: ID!
+        countrycode: CountryCode
+    ): BuySMSActivationResult!
+}
+
+extend type Subscription {
+    sms_activation_state(id: ID!): SMSActivationState
+}
+
+extend type Mutation {
+    confirm_sms_activation(id: ID!): Void
+}
+
+# =====
+
+type BuySMSActivationResult {
+    id: ID!
+    created_at: DateTime!
+}
+
+# =====
+
+union SMSActivationState = SMSActivationLoading | SMSActivationSuccess
+
+interface ISMSActivationState {
+    status: SMSActivationStatus
+    id: ID!
+    created_at: DateTime!
+
+    item: String!
+    item_id: String!
+    country: String!
+    countrycode: String!
+}
+
+type SMSActivationLoading implements ISMSActivationState {
+    status: SMSActivationStatus
+    id: ID!
+    created_at: DateTime!
+
+    item: String!
+    item_id: String!
+    country: String!
+    countrycode: String!
+}
+
+type SMSActivationSuccess implements ISMSActivationState {
+    status: SMSActivationStatus
+    id: ID!
+    created_at: DateTime!
+
+    phonenumber: PhoneNumber!
+    sms: SMS!
+
+    item: String!
+    item_id: String!
+    country: String!
+    countrycode: String!
+}
+
+enum SMSActivationStatus {
+    LOADING
+    SUCCESS
+}
+
+# =====
+
+type SMS {
+    message: String!
+    code: String # Извлечь код из сообщения может быть невозможно
+}
