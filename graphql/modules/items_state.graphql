@@ -1,0 +1,33 @@
+extend type Query {
+    available_items: [Item!]!
+    available_item_countries(id: ID!): [Country!]!
+    item_state_by_country(id: ID!, countrycode: CountryCode!): ItemStateByCountry!
+}
+
+type Item {
+    item: String!
+    id: ID!
+}
+
+type Country {
+    country: String!
+    countrycode: CountryCode!
+}
+
+type ItemStateByCountry {
+    item: String!
+    id: ID!
+
+    country: String!
+    countrycode: CountryCode!
+
+    """ en: Approximate quantity of available virtual numbers for this item """
+    """ ru: Примерное количество доступных виртуальных номеров """
+    approx_qty: Int!
+
+    """ en: Цена при покупке в количестве 1ой шт. """
+    """ ru: The same as retail price """
+    price: Currency!
+    retail_price: Currency!
+    wholesale_price: Currency!
+}
