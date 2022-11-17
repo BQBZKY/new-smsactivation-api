@@ -1,12 +1,22 @@
 schema {
     query: Query
+    subscription: Subscription
 }
 
 # Query, Mutation & Subscription types
 
 type Query {
-    items: [Item!]!
-    item(id: ID!): Item
+    items: [ItemState!]!
+    item(id: ID!): ItemState
+
+    buy_sms_activation(
+        item_id: ID!,
+        country_code: CountryCode,
+    ): BuySMSActivationResult!
+}
+
+type Subscription {
+    sms_activation(id: ID!)
 }
 
 # Custom Scalars
@@ -14,20 +24,60 @@ type Query {
 scalar Currency
 scalar CountryCode
 
-# Complex types
+# Simple types
 
-type Item {
-    id: ID!
-    title: String!
+type SMS {
+    message: String!
 
-    prices: [ItemPrice!]!
-    price(country_code: CountryCode!): ItemPrice
+    # Извлечь код из сообщения может быть невозможно, если например код это не
+    # стандартные 4-6 циферок
+    code: String
 }
 
-type ItemPrice {
+type Item implements IItem {}
+
+type Error {
+    code: String!
+    message: String
+}
+
+# Complex types
+
+type ItemState implements IItem {
+    prices: [ItemPrices!]!
+    price(country_code: CountryCode!): ItemPrices
+}
+
+type ItemPricesByCountry implements ICountry, IPrices {}
+
+type BuySMSActivationGoodResult implements IItem, ICountry {
+    id: ID!
+    price: Currency!
+}
+
+type BuySMSActivationBadResult {
+    errors: [Error!]!
+}
+
+# Unions
+
+union BuySMSActivationResult = BuySMSActivationGoodResult | BuySMSActivationBadResult
+
+# Enums
+
+# Interfaces
+
+interface IItem {
+    item: String!
+    item_id: ID!
+}
+
+interface ICountry {
     country: String!
     country_code: CountryCode!
+}
 
+interface IPrices {
     price: Currency! # то же самое что и retail_price
     retail_price: Currency!
     wholesale_price: Currency!
