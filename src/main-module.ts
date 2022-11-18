@@ -2,17 +2,16 @@ import { Module } from '@nestjs/common'
 import { GraphQLModule } from '@nestjs/graphql'
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo'
 
-import { TrialResolver } from './trial-resolver'
-
-import path from 'node:path'
+import { FreePhoneNumbersModule } from './modules/free-phone-numbers/module'
 
 @Module({
     imports: [
         GraphQLModule.forRoot<ApolloDriverConfig>({
             driver: ApolloDriver,
-            typePaths: [path.resolve(__dirname, 'schema.graphql')],
+            autoSchemaFile: true,
         }),
+
+        FreePhoneNumbersModule,
     ],
-    providers: [TrialResolver],
 })
 export class MainModule {}

@@ -4,5 +4,8 @@
     "compilerOptions": {
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
+
+        "noUnusedLocals": false,
+        "noUnusedParameters": true,
     }
 }
