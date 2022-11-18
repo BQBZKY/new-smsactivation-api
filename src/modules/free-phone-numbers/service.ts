@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { formatRFC3339 } from 'date-fns'
-
+import { range } from 'lodash'
 import fetch from 'node-fetch'
 
 type GetPhoneNumbersResponseData = {
@@ -14,6 +14,7 @@ type GetPhoneNumbersResponseData = {
 type GetMessagesRequestParams = {
     country: number | string
     phone: string
+    page?: number
 }
 
 type GetMessagesResponseData = {
@@ -23,7 +24,18 @@ type GetMessagesResponseData = {
             in_number: string
             created_at: string
         }[]
+        from: number
+        // to: number
+        total: number
+        per_page: number
+        // current_page: number
+        // last_page: number
     }
+}
+
+type GetMessagesPaginationOptions = {
+    cursor?: number
+    limit: number
 }
 
 @Injectable()
@@ -50,7 +62,10 @@ export class FreeMessagesService {
         private readonly freePhoneNumbersService: FreePhoneNumbersService,
     ) {}
 
-    async getMessages(phoneNumber: string) {
+    async getMessages(
+        phoneNumber: string,
+        paginationOptions: GetMessagesPaginationOptions,
+    ) {
         const params: GetMessagesRequestParams = await (
             async () => {
                 const { callingCode: cc } =
@@ -67,6 +82,40 @@ export class FreeMessagesService {
             }
         )()
 
+        const { cursor, limit = 50 } = paginationOptions
+        const { total, perPage } = FreeMessagesService.parsePaginationInfo(
+            await FreeMessagesService.request(params)
+        )
+
+        let start = 0
+        let end = limit
+
+        if (cursor) {
+            start = total - cursor
+            end = start + limit
+
+            if (end > total) {
+                end = total
+            }
+        }
+
+        const pages = range(
+            Math.ceil((start + 1) / perPage),
+            Math.ceil((end + 1) / perPage),
+        )
+
+        return await Promise.all(
+            pages.map(
+              page => FreeMessagesService.request({ ...params, page })
+            )
+        ).then(
+            data => data.map(
+                FreeMessagesService.parseMessages
+            ).flat()
+        )
+    }
+
+    static async request(params: GetMessagesRequestParams) {
         const url = new URL('https://onlinesim.ru/api/getFreeMessageList?lang=en')
 
         for (const key in params) {
@@ -77,11 +126,28 @@ export class FreeMessagesService {
         const response = await fetch(url)
         const data = await response.json() as GetMessagesResponseData
 
+        return data
+    }
+
+    static parsePaginationInfo(data: GetMessagesResponseData) {
+        return {
+            total: data.messages.total,
+            offset: data.messages.from - 1,
+            perPage: data.messages.per_page,
+        }
+    }
+
+    static parseMessages(data: GetMessagesResponseData) {
+        const { total, offset } = FreeMessagesService.parsePaginationInfo(data)
+
+        let id = total - offset
+
         return data.messages.data.map(({
             text:           message,
             in_number: receivedFrom,
             created_at:  receivedAt,
         }) => ({
+            id: id--,
             message: message.replace(/received from onlinesim.ru/i, "").trim(),
             receivedFrom,
             receivedAt: formatRFC3339(new Date(receivedAt))

@@ -8,6 +8,7 @@ import {
 } from '@nestjs/graphql'
 
 import {
+    PositiveIntResolver as PositiveInt,
     PhoneNumberResolver as PhoneNumber,
     DateTimeResolver as DateTime,
 } from 'graphql-scalars'
@@ -25,6 +26,9 @@ class FreePhoneNumber {
 
 @ObjectType()
 class FreeMessage {
+    @Field(() => PositiveInt)
+    id!: number
+
     @Field()
     message!: string
 
@@ -39,6 +43,16 @@ class FreeMessage {
 export class GetFreeMessagesArgs {
   @Field()
   phoneNumber!: string
+
+  @Field(() => PositiveInt, {
+    defaultValue: 50
+  })
+  limit!: number
+
+  @Field(() => PositiveInt, {
+    nullable: true
+  })
+  cursor?: number
 }
 
 @Resolver()
@@ -55,8 +69,8 @@ export class FreePhoneNumbersResolver {
 
     @Query(() => [FreeMessage])
     async freeMessages(
-        @Args() { phoneNumber }: GetFreeMessagesArgs
+        @Args() { phoneNumber, ...pagination }: GetFreeMessagesArgs
     ) {
-        return this.freeMessagesService.getMessages(phoneNumber)
+        return this.freeMessagesService.getMessages(phoneNumber, pagination)
     }
 }
