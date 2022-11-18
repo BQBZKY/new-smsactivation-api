@@ -1,0 +1,8 @@
+{
+    "extends": "@tsconfig/node18-strictest/tsconfig.json",
+    "include": ["src"],
+    "compilerOptions": {
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+    }
+}
