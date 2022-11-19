@@ -5,6 +5,8 @@ import {
     ObjectType,
     ArgsType,
     Field,
+    registerEnumType,
+    createUnionType,
 } from '@nestjs/graphql'
 
 import {
@@ -13,7 +15,11 @@ import {
     DateTimeResolver as DateTime,
 } from 'graphql-scalars'
 
-import { FreePhoneNumbersService, FreeMessagesService } from './service'
+import {
+    FreePhoneNumbersService,
+    FreeMessagesService,
+    PhoneNumberNotFoundError,
+} from './service'
 
 @ObjectType()
 class FreePhoneNumber {
@@ -40,20 +46,59 @@ class FreeMessage {
 }
 
 @ArgsType()
-export class GetFreeMessagesArgs {
-  @Field()
-  phoneNumber!: string
+class GetFreeMessagesArgs {
+    @Field()
+    phoneNumber!: string
 
-  @Field(() => PositiveInt, {
-    defaultValue: 50
-  })
-  limit!: number
+    @Field(() => PositiveInt, {
+        defaultValue: 50,
+    })
+    limit!: number
 
-  @Field(() => PositiveInt, {
-    nullable: true
-  })
-  cursor?: number
+    @Field(() => PositiveInt, {
+        nullable: true,
+    })
+    cursor?: number
 }
+
+@ObjectType()
+class GetFreeMessagesPayload {
+    @Field(() => [FreeMessage])
+    messages!: FreeMessage[]
+
+    // @Field(() => PositiveInt, {
+    //     nullable: true,
+    // })
+    // nextCursor?: number
+
+    // @Field()
+    // hasMore!: boolean
+}
+
+enum GetFreeMessagesErrorCode {
+    PHONE_NUMBER_NOT_FOUND = 'PHONE_NUMBER_NOT_FOUND'
+}
+registerEnumType(GetFreeMessagesErrorCode, { name: 'GetFreeMessagesErrorCode' })
+
+@ObjectType()
+class GetFreeMessagesError {
+    @Field(() => GetFreeMessagesErrorCode)
+    error!: GetFreeMessagesErrorCode
+}
+
+const GetFreeMessagesResult = createUnionType({
+    name: 'GetFreeMessagesResult',
+    types: () => [GetFreeMessagesPayload, GetFreeMessagesError] as const,
+    resolveType: (obj) => {
+        if (obj.messages) {
+            return GetFreeMessagesPayload
+        }
+        if (obj.error) {
+            return GetFreeMessagesError
+        }
+        return null
+    }
+})
 
 @Resolver()
 export class FreePhoneNumbersResolver {
@@ -67,10 +112,21 @@ export class FreePhoneNumbersResolver {
         return this.freePhoneNumbersService.getPhoneNumbers()
     }
 
-    @Query(() => [FreeMessage])
+    @Query(() => GetFreeMessagesResult)
     async freeMessages(
         @Args() { phoneNumber, ...pagination }: GetFreeMessagesArgs
-    ) {
-        return this.freeMessagesService.getMessages(phoneNumber, pagination)
+    ): Promise<typeof GetFreeMessagesResult> {
+        try {
+            return {
+                messages: await this.freeMessagesService.getMessages(phoneNumber, pagination),
+            }
+        } catch(error) {
+            if (error instanceof PhoneNumberNotFoundError) {
+                return {
+                    error: GetFreeMessagesErrorCode.PHONE_NUMBER_NOT_FOUND
+                }
+            }
+            throw error
+        }
     }
 }

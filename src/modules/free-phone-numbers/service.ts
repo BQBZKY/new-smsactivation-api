@@ -38,6 +38,8 @@ type GetMessagesPaginationOptions = {
     limit: number
 }
 
+export class PhoneNumberNotFoundError extends Error {}
+
 @Injectable()
 export class FreePhoneNumbersService {
     async getPhoneNumbers() {
@@ -73,6 +75,13 @@ export class FreeMessagesService {
                         phoneNumbers => phoneNumbers.find(
                             obj => obj.phoneNumber === phoneNumber
                         )!
+                    ).then(
+                        result => {
+                            if (!result) {
+                                throw new PhoneNumberNotFoundError()
+                            }
+                            return result
+                        }
                     )
 
                 return {
