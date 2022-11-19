@@ -73,6 +73,12 @@ class GetFreeMessagesPayload {
 
     // @Field()
     // hasMore!: boolean
+
+    constructor({
+        messages
+    }: GetFreeMessagesPayload) {
+        this.messages = messages
+    }
 }
 
 enum GetFreeMessagesErrorCode {
@@ -84,20 +90,26 @@ registerEnumType(GetFreeMessagesErrorCode, { name: 'GetFreeMessagesErrorCode' })
 class GetFreeMessagesError {
     @Field(() => GetFreeMessagesErrorCode)
     error!: GetFreeMessagesErrorCode
+
+    constructor({
+        error
+    }: GetFreeMessagesError) {
+        this.error = error
+    }
 }
 
 const GetFreeMessagesResult = createUnionType({
     name: 'GetFreeMessagesResult',
     types: () => [GetFreeMessagesPayload, GetFreeMessagesError] as const,
-    resolveType: (obj) => {
-        if (obj.messages) {
-            return GetFreeMessagesPayload
-        }
-        if (obj.error) {
-            return GetFreeMessagesError
-        }
-        return null
-    }
+    // resolveType: (obj) => {
+    //     if (obj.messages) {
+    //         return GetFreeMessagesPayload
+    //     }
+    //     if (obj.error) {
+    //         return GetFreeMessagesError
+    //     }
+    //     return null
+    // }
 })
 
 @Resolver()
@@ -117,14 +129,14 @@ export class FreePhoneNumbersResolver {
         @Args() { phoneNumber, ...pagination }: GetFreeMessagesArgs
     ): Promise<typeof GetFreeMessagesResult> {
         try {
-            return {
+            return new GetFreeMessagesPayload({
                 messages: await this.freeMessagesService.getMessages(phoneNumber, pagination),
-            }
+            })
         } catch(error) {
             if (error instanceof PhoneNumberNotFoundError) {
-                return {
+                return new GetFreeMessagesError({
                     error: GetFreeMessagesErrorCode.PHONE_NUMBER_NOT_FOUND
-                }
+                })
             }
             throw error
         }
