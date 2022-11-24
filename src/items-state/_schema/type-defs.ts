@@ -2,6 +2,7 @@ import {
     ObjectType,
     ArgsType,
     Field,
+    ID,
 } from '@nestjs/graphql'
 
 import {
@@ -12,6 +13,9 @@ import {
 export class Item {
     @Field()
     name!: string
+
+    @Field(() => ID)
+    id!: string
 }
 
 @ObjectType()
@@ -19,16 +23,16 @@ export class Country {
     @Field()
     country!: string
 
-    @Field(() => CountryCode)
-    countryCode!: string
+    // @Field(() => CountryCode)
+    // countryCode!: string
 }
 
 /* * * * * ARGS TYPES * * * * */
 
 @ArgsType()
 export class GetAvailableItemCountries_Args {
-    @Field()
-    item!: string
+    @Field(() => ID)
+    itemId!: string
 }
 
 @ArgsType()
@@ -61,6 +65,12 @@ export class GetAvailableCountries_Payload {
 export class GetAvailableItemCountries_Payload {
     @Field(() => [Country])
     data!: Country[]
+
+    constructor(
+        { data }: GetAvailableItemCountries_Payload
+    ) {
+        this.data = data
+    }
 }
 
 @ObjectType()

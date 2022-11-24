@@ -24,6 +24,7 @@ export default class ItemsStateModule_Resolver {
             type ResponseData = {
                 data: {
                     name: string
+                    shortName: string
                 }[]
             }
 
@@ -41,7 +42,13 @@ export default class ItemsStateModule_Resolver {
             const { data } = await response.json() as ResponseData
 
             return new GetAvailableItems_Payload({
-                data: data.map(({ name }) => ({ name }))
+                data: data.map(({
+                    name,
+                    shortName: id
+                }) => ({
+                    name,
+                    id,
+                }))
             })
         } catch {
             return { data: [] }
@@ -50,9 +57,38 @@ export default class ItemsStateModule_Resolver {
 
     @Query(() => GetAvailableItemCountries_Payload)
     async availableItemCountries(
-        @Args() args: GetAvailableItemCountries_Args,
+        @Args() { itemId }: GetAvailableItemCountries_Args,
     ): Promise<GetAvailableItemCountries_Payload> {
-        return { data: [] }
+        try {
+            type ResponseData = {
+                data: {
+                    name: string
+                }[]
+            }
+
+            const response = await fetch('https://sms-activate.org/stubs/apiMobile.php', {
+                method: 'POST',
+                headers: {
+                    'Cookie': 'lang=en;'
+                },
+                body: new URLSearchParams({
+                    action: 'countriesStackRender',
+                    service: itemId,
+                })
+            })
+
+            const { data } = await response.json() as ResponseData
+
+            return new GetAvailableItemCountries_Payload({
+                data: data.map(({
+                    name: country,
+                }) => ({
+                    country,
+                }))
+            })
+        } catch {
+            return { data: [] }
+        }
     }
 
     /* * * * * COUNTRY FIRST APPROACH * * * * */
