@@ -86,8 +86,8 @@ export default class ItemsStateModule_Resolver {
                     name: country,
                 }) => ({
                     country,
-                    countryCode: findCountryCode(country) ?? null,
-                }))
+                    countryCode: findCountryCode(country)!,
+                })).filter(({ countryCode }) => !!countryCode)
             })
         } catch {
             return { data: [] }
