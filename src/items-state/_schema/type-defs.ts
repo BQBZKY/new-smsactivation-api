@@ -23,8 +23,10 @@ export class Country {
     @Field()
     country!: string
 
-    // @Field(() => CountryCode)
-    // countryCode!: string
+    @Field(() => CountryCode, {
+        nullable: true // FIXME Must not be nullable
+    })
+    countryCode!: string | null
 }
 
 /* * * * * ARGS TYPES * * * * */

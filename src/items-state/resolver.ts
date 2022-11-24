@@ -12,6 +12,8 @@ import {
 
 import fetch from 'node-fetch'
 
+import findCountryCode from '_utils/findCountryCode'
+
 @Resolver()
 export default class ItemsStateModule_Resolver {
     constructor() {}
@@ -84,6 +86,7 @@ export default class ItemsStateModule_Resolver {
                     name: country,
                 }) => ({
                     country,
+                    countryCode: findCountryCode(country) ?? null,
                 }))
             })
         } catch {
