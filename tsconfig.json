@@ -6,6 +6,6 @@
         "experimentalDecorators": true,
 
         "noUnusedLocals": false,
-        "noUnusedParameters": true,
+        "noUnusedParameters": false,
     }
 }

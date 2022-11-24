@@ -10,6 +10,8 @@ import {
     GetAvailableCountryItems_Args,
 } from './_schema/type-defs'
 
+import fetch from 'node-fetch'
+
 @Resolver()
 export default class ItemsStateModule_Resolver {
     constructor() {}
@@ -18,7 +20,32 @@ export default class ItemsStateModule_Resolver {
 
     @Query(() => GetAvailableItems_Payload)
     async availableItems(): Promise<GetAvailableItems_Payload> {
-        return { data: [] }
+        try {
+            type ResponseData = {
+                data: {
+                    name: string
+                }[]
+            }
+
+            const response = await fetch('https://sms-activate.org/stubs/apiMobile.php', {
+                method: 'POST',
+                headers: {
+                    'Cookie': 'lang=en;'
+                },
+                body: new URLSearchParams({
+                    action: 'getAllServicesDesktop',
+                    render: 'true',
+                })
+            })
+
+            const { data } = await response.json() as ResponseData
+
+            return new GetAvailableItems_Payload({
+                data: data.map(({ name }) => ({ name }))
+            })
+        } catch {
+            return { data: [] }
+        }
     }
 
     @Query(() => GetAvailableItemCountries_Payload)

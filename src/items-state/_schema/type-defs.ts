@@ -45,9 +45,9 @@ export class GetAvailableItems_Payload {
     data!: Item[]
 
     constructor(
-
+        { data }: GetAvailableItems_Payload
     ) {
-
+        this.data = data
     }
 }
 
